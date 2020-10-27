@@ -1,0 +1,9 @@
+initial_balance: 3000000
+interest_rate: 0.13
+month_savings: 100000
+months_to_move: 24
+mortgage_rate: 0.09
+property_price: 6000000
+property_price_ratio: 0.5
+rent_price: 35000
+years: 15
