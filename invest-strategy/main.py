@@ -6,7 +6,21 @@ COMMISSION_RATES = {
 INTEREST_RATE = 0.04
 MONTHLY_INVESTMENT = 100_000
 MONTHS_PER_YEAR = 12
+
+# "Облигации Плюс" from 2017-10-23 to 2020-10-23
 SHARE_PRICE_HISTORY_BONDS = (
+    3741.74,
+    3767.22,
+    3787.6,
+    3861.09,
+    3931.06,
+    3959.46,
+    3921.55,
+    3953.64,
+    3949.79,
+    3964.15,
+    3863.9,
+    3875.97,
     3907.98,
     3910.74,
     3925.15,
@@ -33,7 +47,21 @@ SHARE_PRICE_HISTORY_BONDS = (
     4747.56,
     4774.88
 )
+
+# "Ликвидные акции" from 2017-10-23 to 2020-10-23
 SHARE_PRICE_HISTORY_SHARES = (
+    3859.41,
+    4064.93,
+    3942.53,
+    4374.1,
+    4481.34,
+    4412.38,
+    4391.72,
+    4547.28,
+    4515.96,
+    4648.97,
+    4656.81,
+    4964.05,
     4908.94,
     4886.37,
     4899.49,
@@ -76,11 +104,11 @@ class Calculator:
 
     def invest_if_cheaper(self):
         history_length = len(self._share_price_history)
-        invest_months = {
+        invest_months = {0, history_length - 1} | {
             i
             for i in range(1, history_length)
             if self._share_price_history[i] < self._share_price_history[i - 1]
-        } | {0, history_length - 1}
+        }
         self._invest(invest_months)
 
     def _invest(self, invest_months):
