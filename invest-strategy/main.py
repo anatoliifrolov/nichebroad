@@ -72,7 +72,7 @@ class Calculator:
         saving_months = set(range(period_length - 1,
                                   history_length - 1,
                                   period_length))
-        return self._invest(saving_months)
+        self._invest(saving_months)
 
     def invest_if_cheaper(self):
         history_length = len(self._share_price_history)
@@ -81,7 +81,7 @@ class Calculator:
             for i in range(1, history_length - 1)
             if self._share_price_history[i - 1] < self._share_price_history[i]
         }
-        return self._invest(saving_months)
+        self._invest(saving_months)
 
     def _invest(self, saving_months):
         investment = 0
@@ -94,9 +94,18 @@ class Calculator:
                 self._buy_shares(investment, share_price)
                 investment = 0
 
+    def get_profit_rate(self):
+        balance = self.get_balance()
+        history_length = len(self._share_price_history)
+        investments = MONTHLY_INVESTMENT * history_length
+        profit = balance - investments
+        profit_rate = profit / investments
+        return profit_rate
+
+    def get_balance(self):
         last_share_price = self._share_price_history[-1]
-        shares_price = self._shares_amount * last_share_price
-        return shares_price
+        balance = self._shares_amount * last_share_price
+        return balance
 
     def _buy_shares(self, investment, share_price):
         commission_threshold = 0
@@ -110,16 +119,23 @@ class Calculator:
         new_shares = investment / share_price
         self._shares_amount += new_shares
 
+    def __str__(self):
+        balance = self.get_balance()
+        profit_rate = self.get_profit_rate()
+        return f'{balance:.2f} ({profit_rate:.2%})'
+
 
 def main():
     for share_price_history in (SHARE_PRICE_HISTORY_BONDS,
                                 SHARE_PRICE_HISTORY_SHARES):
         print('#' * 100)
-        balance = Calculator(share_price_history).invest_if_cheaper()
-        print(f'cheaper strategy: {balance:.2f}')
+        calculator = Calculator(share_price_history)
+        calculator.invest_if_cheaper()
+        print(f'cheaper strategy: {calculator}')
         for i in (1, 2, 3, 4, 5, 6):
-            balance = Calculator(share_price_history).invest_periodically(i)
-            print(f'{i}-months strategy: {balance:.2f}')
+            calculator = Calculator(share_price_history)
+            calculator.invest_periodically(i)
+            print(f'{i}-months strategy: {calculator})')
 
 
 if __name__ == '__main__':
