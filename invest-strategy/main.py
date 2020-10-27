@@ -69,30 +69,32 @@ class Calculator:
 
     def invest_periodically(self, period_length: int):
         history_length = len(self._share_price_history)
-        saving_months = set(range(period_length - 1,
-                                  history_length - 1,
-                                  period_length))
-        self._invest(saving_months)
+        invest_months = set(range(period_length - 1,
+                                  history_length,
+                                  period_length)) | {history_length - 1}
+        self._invest(invest_months)
 
     def invest_if_cheaper(self):
         history_length = len(self._share_price_history)
-        saving_months = {
+        invest_months = {
             i
-            for i in range(1, history_length - 1)
-            if self._share_price_history[i - 1] < self._share_price_history[i]
-        }
-        self._invest(saving_months)
+            for i in range(1, history_length)
+            if self._share_price_history[i] < self._share_price_history[i - 1]
+        } | {0, history_length - 1}
+        self._invest(invest_months)
 
-    def _invest(self, saving_months):
+    def _invest(self, invest_months):
         investment = 0
         for i, share_price in enumerate(self._share_price_history):
             investment += MONTHLY_INVESTMENT
-            if i in saving_months:
-                interest = investment * INTEREST_RATE / MONTHS_PER_YEAR
-                investment += interest
-            else:
+            if i in invest_months:
                 self._buy_shares(investment, share_price)
                 investment = 0
+            else:
+                interest = investment * INTEREST_RATE / MONTHS_PER_YEAR
+                investment += interest
+
+        assert investment == 0
 
     def get_profit_rate(self):
         balance = self.get_balance()
@@ -135,7 +137,7 @@ def main():
         for i in (1, 2, 3, 4, 5, 6):
             calculator = Calculator(share_price_history)
             calculator.invest_periodically(i)
-            print(f'{i}-months strategy: {calculator})')
+            print(f'{i}-months strategy: {calculator}')
 
 
 if __name__ == '__main__':
