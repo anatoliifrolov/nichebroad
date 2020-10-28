@@ -3,12 +3,12 @@ COMMISSION_RATES = {
     500_000: 0.009,
     3_000_000: 0.005
 }
-INTEREST_RATE = 0.04
+INTEREST_RATE = 0.035
 MONTHLY_INVESTMENT = 100_000
-MONTHS_PER_YEAR = 12
+MONTHS_IN_YEAR = 12
 
 # "Облигации Плюс" from 2017-10-23 to 2020-10-23
-SHARE_PRICE_HISTORY_BONDS = (
+BONDS_PRICE_HISTORY = (
     3741.74,
     3767.22,
     3787.6,
@@ -49,7 +49,7 @@ SHARE_PRICE_HISTORY_BONDS = (
 )
 
 # "Ликвидные акции" from 2017-10-23 to 2020-10-23
-SHARE_PRICE_HISTORY_SHARES = (
+SHARES_PRICE_HISTORY = (
     3859.41,
     4064.93,
     3942.53,
@@ -90,82 +90,75 @@ SHARE_PRICE_HISTORY_SHARES = (
 )
 
 
-class Calculator:
-    def __init__(self, share_price_history):
-        self._share_price_history = share_price_history
-        self._shares_amount = 0.0
+class Fund:
+    def __init__(self, price_history):
+        self._price_history = price_history
+        self._assets = 0.0
 
     def invest_periodically(self, period_length: int):
-        history_length = len(self._share_price_history)
+        history_length = len(self._price_history)
         invest_months = set(range(period_length - 1,
                                   history_length,
                                   period_length)) | {history_length - 1}
-        self._invest(invest_months)
+        self._invest_or_save(invest_months)
 
     def invest_if_cheaper(self):
-        history_length = len(self._share_price_history)
+        history_length = len(self._price_history)
         invest_months = {0, history_length - 1} | {
             i
             for i in range(1, history_length)
-            if self._share_price_history[i] < self._share_price_history[i - 1]
+            if self._price_history[i] < self._price_history[i - 1]
         }
-        self._invest(invest_months)
+        self._invest_or_save(invest_months)
 
-    def _invest(self, invest_months):
+    def _invest_or_save(self, invest_months):
         investment = 0
-        for i, share_price in enumerate(self._share_price_history):
+        for i, price in enumerate(self._price_history):
             investment += MONTHLY_INVESTMENT
             if i in invest_months:
-                self._buy_shares(investment, share_price)
+                self.buy_assets(investment, price)
                 investment = 0
             else:
-                interest = investment * INTEREST_RATE / MONTHS_PER_YEAR
+                interest = investment * INTEREST_RATE / MONTHS_IN_YEAR
                 investment += interest
 
         assert investment == 0
 
-    def get_profit_rate(self):
-        balance = self.get_balance()
-        history_length = len(self._share_price_history)
-        investments = MONTHLY_INVESTMENT * history_length
-        profit = balance - investments
-        profit_rate = profit / investments
-        return profit_rate
-
-    def get_balance(self):
-        last_share_price = self._share_price_history[-1]
-        balance = self._shares_amount * last_share_price
-        return balance
-
-    def _buy_shares(self, investment, share_price):
-        commission_threshold = 0
-        for amount in COMMISSION_RATES:
-            if amount <= investment:
-                commission_threshold = max(commission_threshold, amount)
-
+    def buy_assets(self, investment: float, price: float):
+        commission_threshold = max(
+            ct for ct in COMMISSION_RATES if ct <= investment
+        )
         commission_rate = COMMISSION_RATES[commission_threshold]
         commission = investment * commission_rate
         investment -= commission
-        new_shares = investment / share_price
-        self._shares_amount += new_shares
+        assets = investment / price
+        self._assets += assets
+
+    def estimate(self):
+        last_price = self._price_history[-1]
+        value = self._assets * last_price
+        history_length = len(self._price_history)
+        investments = MONTHLY_INVESTMENT * history_length
+        profit = value - investments
+        profit_rate = profit / investments
+        return value, profit_rate
 
     def __str__(self):
-        balance = self.get_balance()
-        profit_rate = self.get_profit_rate()
-        return f'{balance:.2f} ({profit_rate:.2%})'
+        value, profit_rate = self.estimate()
+        return f'{value:.2f} ({profit_rate:.2%})'
 
 
 def main():
-    for share_price_history in (SHARE_PRICE_HISTORY_BONDS,
-                                SHARE_PRICE_HISTORY_SHARES):
+    for price_history in (BONDS_PRICE_HISTORY,
+                          SHARES_PRICE_HISTORY):
         print('#' * 100)
-        calculator = Calculator(share_price_history)
-        calculator.invest_if_cheaper()
-        print(f'cheaper strategy: {calculator}')
+        fund = Fund(price_history)
+        fund.invest_if_cheaper()
+        print(f'cheaper strategy: {fund}')
         for i in (1, 2, 3, 4, 5, 6):
-            calculator = Calculator(share_price_history)
-            calculator.invest_periodically(i)
-            print(f'{i}-months strategy: {calculator}')
+            fund = Fund(price_history)
+            fund.invest_periodically(i)
+            print(f'{i}-months strategy: {fund}')
 
 
 if __name__ == '__main__':
