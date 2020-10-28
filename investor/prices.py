@@ -1,8 +1,7 @@
 from collections import namedtuple
 from datetime import date
 
-Snapshot = namedtuple('PricesSnapshot',
-                      ('date', 'bonds_price', 'shares_price'))
+Snapshot = namedtuple('Snapshot', ('date', 'bonds_price', 'shares_price'))
 
 HISTORY = (
     Snapshot(date=date(year=2017, month=10, day=23),
@@ -118,5 +117,6 @@ HISTORY = (
              shares_price=6158.35),
 )
 
+HISTORY_LENGTH = len(HISTORY)
 BONDS_HISTORY = [s.bonds_price for s in HISTORY]
 SHARES_HISTORY = [s.shares_price for s in HISTORY]
